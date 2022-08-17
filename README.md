@@ -1,2 +1,0 @@
-# HRM
-Helicopter Rescue Missions
