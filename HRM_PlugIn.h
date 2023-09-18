@@ -62,6 +62,7 @@ public:
 	std::vector<HRM_Mission *> m_urban_missions;
 	std::vector<HRM_Mission *> m_sar_missions;
 	std::vector<HRM_Mission *> m_sling_missions;
+	std::vector<HRM_Mission*> m_water_missions;
 
 	std::vector<HRM_Mission*> m_street_fire_missions;
 	std::vector<HRM_Mission*> m_urban_fire_missions;
@@ -72,6 +73,7 @@ public:
 	std::vector<HRM_Waypoint *> m_urban_waypoints;
 	std::vector<HRM_Waypoint *> m_sar_waypoints;
 	std::vector<HRM_Waypoint *> m_sling_waypoints;
+	std::vector<HRM_Waypoint*> m_water_waypoints;
 
 	std::vector<std::string> m_path_vector;
 	std::string m_global_path;
@@ -90,6 +92,7 @@ public:
 	bool m_urban_enable = false;
 	bool m_sar_enable = false;
 	bool m_sling_enable = false;
+	bool m_water_enable = false;
 	bool m_fire_enable = false;
 
 

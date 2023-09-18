@@ -193,6 +193,7 @@ void HRMImguiWidget::buildInterface()
 			ImGui::Checkbox("Street Accidents", &(pHRM->m_street_enable));
 			ImGui::Checkbox("Urban Accidents", &(pHRM->m_urban_enable));
 			ImGui::Checkbox("Search and Rescue", &(pHRM->m_sar_enable));
+			ImGui::Checkbox("Water Rescue", &(pHRM->m_water_enable));
 			ImGui::Checkbox("Sling Line", &(pHRM->m_sling_enable));
 		}
 		else
@@ -203,7 +204,7 @@ void HRMImguiWidget::buildInterface()
 			ImGui::Checkbox("Slope Fire", &(pHRM->m_sling_enable));
 		}
 
-		if ((pHRM->m_street_enable == false) && (pHRM->m_urban_enable == false) && (pHRM->m_sar_enable == false) && (pHRM->m_sling_enable == false))
+		if ((pHRM->m_street_enable == false) && (pHRM->m_urban_enable == false) && (pHRM->m_sar_enable == false) && (pHRM->m_sling_enable == false) && (pHRM->m_water_enable == false))
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, color_red);
 			ImGui::Text("No Mission Type Selected");

@@ -24,20 +24,22 @@ HRM_PlugIn::HRM_PlugIn() :
 	m_urban_missions(),
 	m_sar_missions(),
 	m_sling_missions(),
+	m_water_missions(),
 	m_street_waypoints(),
 	m_urban_waypoints(),
 	m_sar_waypoints(),
 	m_sling_waypoints(),
+	m_water_waypoints(),
 	m_path_vector(),
 	m_fse_airports()
 
 {
 
 	m_path_vector.push_back("BaseMesh");
-	m_path_vector.push_back("Ortho4XP");
-	m_path_vector.push_back("ZonePhoto");
-	m_path_vector.push_back("Forkboy");
-	m_path_vector.push_back("ORBX");
+	//m_path_vector.push_back("Ortho4XP");
+	//m_path_vector.push_back("ZonePhoto");
+	//m_path_vector.push_back("Forkboy");
+	m_path_vector.push_back("CustomScenery");
 
 	m_global_path = m_path_vector[0];
 	m_global_path_index = 0;
@@ -190,6 +192,7 @@ void HRM_PlugIn::PluginStart()
 	ReadCustomWaypoints(m_street_waypoints, "street");
 	ReadCustomWaypoints(m_urban_waypoints, "urban");
 	ReadCustomWaypoints(m_sar_waypoints, "sar");
+	ReadCustomWaypoints(m_water_waypoints, "water");
 	ReadCustomWaypoints(m_sling_waypoints, "sling");
 
 	ReadFSEAirports();
@@ -243,6 +246,7 @@ void HRM_PlugIn::UpdatePosition()
 	for (auto p_mission : m_street_missions)	p_mission->SetPosition(m_ld_latitude, m_ld_longitude, m_lf_heading);
 	for (auto p_mission : m_urban_missions)	p_mission->SetPosition(m_ld_latitude, m_ld_longitude, m_lf_heading);
 	for (auto p_mission : m_sar_missions)	p_mission->SetPosition(m_ld_latitude, m_ld_longitude, m_lf_heading);
+	for (auto p_mission : m_water_missions)	p_mission->SetPosition(m_ld_latitude, m_ld_longitude, m_lf_heading);
 	for (auto p_mission : m_sling_missions)	p_mission->SetPosition(m_ld_latitude, m_ld_longitude, m_lf_heading);
 }
 
@@ -421,7 +425,7 @@ void HRM_PlugIn::MissionCreate()
 	bool disable_type = false;
 	int random_type = 0;
 
-	while ((suitable_waypoint_found == false) && (m_street_enable || m_urban_enable || m_sar_enable || m_sling_enable))
+	while ((suitable_waypoint_found == false) && (m_street_enable || m_urban_enable || m_sar_enable || m_sling_enable || m_water_enable))
 	{
 		if (disable_type == true) 
 		{
@@ -429,6 +433,7 @@ void HRM_PlugIn::MissionCreate()
 			if (random_type == 1) m_urban_enable = false;
 			if (random_type == 2) m_sar_enable = false;
 			if (random_type == 3) m_sling_enable = false;
+			if (random_type == 4) m_water_enable = false;
 		}
 
 		for (auto p_wp : global_waypoints)
@@ -444,6 +449,7 @@ void HRM_PlugIn::MissionCreate()
 		if (m_urban_enable) type_count++;
 		if (m_sar_enable) type_count++;
 		if (m_sling_enable) type_count++;
+		if (m_water_enable) type_count++;
 
 		if (type_count == 0)
 		{
@@ -509,6 +515,20 @@ void HRM_PlugIn::MissionCreate()
 				p_mission_vector = &m_sling_missions;
 
 				if (m_fire_enable == true) p_mission_vector = &m_sling_fire_missions;
+			}
+			else if (!m_sling_enable)	random_type++;
+		}
+
+		if (p_waypoint_vector == NULL)
+		{
+			if ((m_water_enable) && (random_type == 4))
+			{
+				ReadGlobalWaypoints(global_waypoints, "water");
+
+				p_waypoint_vector = &m_water_waypoints;
+				p_mission_vector = &m_water_missions;
+
+				//if (m_fire_enable == true) p_mission_vector = &m_sling_fire_missions;
 			}
 			else if (!m_sling_enable)	random_type++;
 		}
@@ -1228,6 +1248,8 @@ void HRM_PlugIn::CreateFlightPlan()
 		double wp_latitude = mp_cm_waypoint->latitude;
 		double wp_longitude = mp_cm_waypoint->longitude;
 
+
+
 		if (m_cm_estmimated_wp == true)
 		{
 			double deviation_lat_meter = (rand() % m_cm_estimated_radius_m) - (m_cm_estimated_radius_m / 2);
@@ -1242,6 +1264,16 @@ void HRM_PlugIn::CreateFlightPlan()
 			wp_longitude += deviation_long_meter * meter_longitude;
 		}
 
+		int wp_latitude_int = (int)wp_latitude;
+		int wp_longitude_int = (int)wp_longitude;
+
+
+		double wp_lat_min = ((wp_latitude - ((double)wp_latitude_int)) * 600.0);
+		double wp_lon_min = ((wp_longitude - ((double)wp_longitude_int)) * 600.0);
+
+		int wp_lat_min_int = (int)wp_lat_min;
+		int wp_lon_min_int = (int)wp_lon_min;
+
 
 		std::string gtn_file_name = m_gfp_path + m_ds + m_gfp_file;
 
@@ -1254,25 +1286,30 @@ void HRM_PlugIn::CreateFlightPlan()
 			
 			if (wp_latitude >= 0) fms_file << "N";
 			else fms_file << "S";
-			std::string temp = std::to_string(abs(wp_latitude));
-			if (abs(wp_latitude) < 10) temp = "0" + temp;
+			std::string temp = std::to_string(abs(wp_latitude_int));
+			if (abs(wp_latitude_int) < 10) temp = "0" + temp;
+
+			if (abs(wp_lat_min_int) < 10) temp = temp + "00" + std::to_string(abs(wp_lat_min_int));
+			else if (abs(wp_lat_min_int) < 100) temp = temp + "0" + std::to_string(abs(wp_lat_min_int));
+			else temp = temp + std::to_string(abs(wp_lat_min_int));
 			
-			boost::replace_all(temp, ".", "");
+			//boost::replace_all(temp, ".", "");
 			fms_file << temp;
-			//fms_file << temp.substr(0, 2);
-			//if (temp.size() > 3) fms_file << temp.substr(3, temp.size() - 3);
 
 			if (wp_longitude >= 0) fms_file << "E";
 			else fms_file << "W";
-			temp = std::to_string(abs(wp_longitude));
-			if (abs(wp_longitude) < 100) temp = "0" + temp;
-			if (abs(wp_longitude) < 10) temp = "0" + temp;
+			temp = std::to_string(abs(wp_longitude_int));
+
+			if (abs(wp_longitude_int) < 100) temp = "0" + temp;
+			else if (abs(wp_longitude_int) < 10) temp = "00" + temp;
+
+			if (abs(wp_lon_min_int) < 10) temp = temp + "00" + std::to_string(abs(wp_lon_min_int));
+			else if (abs(wp_lon_min_int) < 100) temp = temp + "0" + std::to_string(abs(wp_lon_min_int));
+			else temp = temp + std::to_string(abs(wp_lon_min_int));
 			
 			
-			boost::replace_all(temp, ".", "");
+			//boost::replace_all(temp, ".", "");
 			fms_file << temp;
-			//fms_file << temp.substr(0, 3);
-			//if (temp.size() > 3) fms_file << temp.substr(4, temp.size() - 4);
 
 
 			fms_file << ":F:" << m_cm_hospital_icao << std::endl;
@@ -1719,7 +1756,7 @@ void HRM_PlugIn::ReadWaypointFile(std::vector<HRM_Waypoint*>& waypoint_vector, s
 						XPLMProbeTerrainXYZ(probe, zero_x, zero_y, zero_z, &info);
 						
 						// If no water
-						if (info.is_wet == 0)
+						//if (info.is_wet == 0)
 							waypoint_vector.push_back(p_waypoint);
 
 						p_waypoint = new HRM_Waypoint();
@@ -1987,6 +2024,7 @@ void HRM_PlugIn::ReadMissions()
 	m_urban_missions.clear();
 	m_sar_missions.clear();
 	m_sling_missions.clear();
+	m_water_missions.clear();
 
 	int scenery_number = m_scenery_number + 1;
 
@@ -2027,6 +2065,7 @@ void HRM_PlugIn::ReadMissions()
 					else if (p_mission->m_mission_type == 5)		m_urban_fire_missions.push_back(p_mission);
 					else if (p_mission->m_mission_type == 6)		m_sar_fire_missions.push_back(p_mission);
 					else if (p_mission->m_mission_type == 7)		m_sling_fire_missions.push_back(p_mission);
+					else if (p_mission->m_mission_type == 8)		m_water_missions.push_back(p_mission);
 					else delete p_mission;
 				}
 				else delete p_mission;
